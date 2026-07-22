@@ -15,6 +15,7 @@ class CreateModal extends Component
     public $rubro;
     public $status = 'prospect';
     public $user_id; // Added property
+    public $next_billing_date;
     public $showModal = false;
     public $hasEmail = false;
 
@@ -25,13 +26,14 @@ class CreateModal extends Component
         'rubro' => 'nullable|string',
         'status' => 'required|in:active,inactive,prospect,libre,not_interested',
         'user_id' => 'required|exists:users,id',
+        'next_billing_date' => 'nullable|date',
     ];
 
     #[On('open-create-modal')]
     public function openModal()
     {
-        $this->reset(['name', 'email', 'phone', 'company', 'rubro', 'status', 'hasEmail']);
-        $this->user_id = auth()->id(); // Initialize with current user
+        $this->reset(['name', 'email', 'phone', 'company', 'rubro', 'status', 'hasEmail', 'next_billing_date']);
+        $this->user_id = auth()->id(); // Initialize with creator's id
         $this->showModal = true;
     }
 
@@ -49,6 +51,7 @@ class CreateModal extends Component
             'rubro' => $this->rubro,
             'status' => $this->status,
             'user_id' => $this->user_id, // Use selected user_id
+            'next_billing_date' => $this->next_billing_date,
         ]);
 
         $this->dispatch('client-created');
@@ -59,15 +62,8 @@ class CreateModal extends Component
     public function render()
     {
         $currentUser = auth()->user();
-        $agents = [];
-
-        if ($currentUser->isSuperAdmin()) {
-            // Admin can assign to anyone
-            $agents = \App\Models\User::all();
-        } else {
-            // Others can only assign to self
-            $agents = \App\Models\User::where('id', $currentUser->id)->get();
-        }
+        // Allow assigning to anyone in the team
+        $agents = \App\Models\User::whereIn('id', $currentUser->getTeamUserIds())->get();
 
         return view('livewire.clients.create-modal', [
             'agents' => $agents

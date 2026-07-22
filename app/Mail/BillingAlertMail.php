@@ -10,17 +10,18 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class NextCallReminder extends Mailable
+class BillingAlertMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $call;
-    public $timeframe;
+    public $client;
 
-    public function __construct($call, $timeframe = '2 hours')
+    /**
+     * Create a new message instance.
+     */
+    public function __construct(\App\Models\Client $client)
     {
-        $this->call = $call;
-        $this->timeframe = $timeframe;
+        $this->client = $client;
     }
 
     /**
@@ -28,9 +29,8 @@ class NextCallReminder extends Mailable
      */
     public function envelope(): Envelope
     {
-        $timeString = $this->timeframe === '2 hours' ? 'en 2 horas' : 'en 5 minutos';
         return new Envelope(
-            subject: '🔔 Recordatorio de Próxima Llamada ' . $timeString . ' - ' . $this->call->client->name,
+            subject: 'Alerta de Cobro: ' . $this->client->name,
         );
     }
 
@@ -40,12 +40,7 @@ class NextCallReminder extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.next-call-reminder',
-            with: [
-                'call' => $this->call,
-                'client' => $this->call->client,
-                'timeframe' => $this->timeframe,
-            ],
+            markdown: 'emails.billing_alert',
         );
     }
 

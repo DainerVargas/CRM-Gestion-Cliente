@@ -6,35 +6,39 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Outfit', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: 'Cormorant Garamond', Georgia, Cambria, "Times New Roman", Times, serif;
 
-    --color-primary: #043d8a;
-    --color-secondary: #2c4d82;
-    --color-accent: #45C2ED;
-    --color-accent-teal: #15B7B7;
-    --color-canvas: #f6f7fb;
+    --color-primary: #b59a6d;
+    --color-secondary: #231c16;
+    --color-accent: #dfd2bc;
+    --color-accent-teal: #849463;
+    --color-canvas: #FAF6F0;
 
     /* Primary Color Overrides */
-    --color-indigo-500: #1a56ad;
+    --color-indigo-500: #c5ac83;
     --color-indigo-600: var(--color-primary);
-    --color-indigo-700: #032b61;
+    --color-indigo-700: #9c8157;
 
     /* Secondary / Dark Overrides */
-    --color-slate-900: #0a1b33; 
+    --color-slate-900: #1c1612; 
     --color-slate-800: var(--color-secondary);
-    --color-slate-700: #3b5c91;
-    --color-slate-600: #4a6da8;
-    --color-slate-500: #6b89bd;
-    --color-slate-400: #8ba5d1;
-    --color-slate-100: #eef1f6;
+    --color-slate-700: #3b3228;
+    --color-slate-600: #55483b;
+    --color-slate-500: #77695a;
+    --color-slate-400: #a39483;
+    --color-slate-300: #d4c9bd;
+    --color-slate-200: #e9e2d9;
+    --color-slate-100: #f3ede4;
     --color-slate-50: var(--color-canvas);
 
     /* Success/Teal mapping */
     --color-emerald-500: var(--color-accent-teal);
-    --color-emerald-600: #12a1a1;
+    --color-emerald-600: #6c7c4c;
 
     /* Custom classes for easier use */
     --color-brand-blue: var(--color-primary);
     --color-brand-cyan: var(--color-accent);
 }
+

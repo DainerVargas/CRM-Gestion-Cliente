@@ -315,9 +315,16 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
+
                     <div>
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Agente Beit</label>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Próximo Cobro</label>
+                        <input type="date" wire:model="next_billing_date" class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+                        @error('next_billing_date') <span class="text-rose-500 text-[10px] font-bold mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Agente Encargado</label>
                         <select wire:model="user_id" class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
                             @foreach($agents as $agent)
                                 <option value="{{ $agent->id }}">{{ $agent->name }}</option>

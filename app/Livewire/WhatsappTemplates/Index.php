@@ -53,7 +53,7 @@ class Index extends Component
             abort(403);
         }
 
-        $template = WhatsappTemplate::where('user_id', auth()->id())->findOrFail($id);
+        $template = WhatsappTemplate::whereIn('user_id', auth()->user()->getTeamUserIds())->findOrFail($id);
         $this->templateId = $template->id;
         $this->title = $template->title;
         $this->description = $template->description;
@@ -68,7 +68,7 @@ class Index extends Component
 
         $this->validate();
 
-        $template = WhatsappTemplate::where('user_id', auth()->id())->findOrFail($this->templateId);
+        $template = WhatsappTemplate::whereIn('user_id', auth()->user()->getTeamUserIds())->findOrFail($this->templateId);
         $template->update([
             'title' => $this->title,
             'description' => $this->description,
@@ -84,14 +84,14 @@ class Index extends Component
             abort(403);
         }
 
-        WhatsappTemplate::where('user_id', auth()->id())->findOrFail($id)->delete();
+        WhatsappTemplate::whereIn('user_id', auth()->user()->getTeamUserIds())->findOrFail($id)->delete();
         session()->flash('message', 'Plantilla eliminada.');
     }
 
     public function render()
     {
         return view('livewire.whatsapp-templates.index', [
-            'templates' => WhatsappTemplate::where('user_id', auth()->id())->latest()->paginate(10)
+            'templates' => WhatsappTemplate::whereIn('user_id', auth()->user()->getTeamUserIds())->latest()->paginate(10)
         ])->layout('layouts.app');
     }
 }

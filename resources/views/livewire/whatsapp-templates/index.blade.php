@@ -3,7 +3,8 @@
     <div class="md:flex md:items-center md:justify-between px-4">
         <div class="flex-1 min-w-0">
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
-                Plantillas <span class="text-[#45C2ED] font-black">WhatsApp</span>
+                Plantillas <span class="text-primary font-black">WhatsApp</span>
+
             </h2>
             <p class="mt-2 text-sm text-slate-500 font-medium tracking-tight">Gestiona los mensajes predeterminados para enviar a tus clientes.</p>
         </div>

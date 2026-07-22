@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Models\CylinderInventory;
 use App\Models\Client;
 use App\Models\SalePayment;
+use App\Models\Service;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,10 @@ class SettlementManager extends Component
     // Form fields for Sale
     public $client_id;
     public $client_name_manual;
-    public $quantity = 1;
+    public $cart = [];
+    public $selected_service_id = '';
+    public $selected_quantity = 1;
+    public $selected_price = null;
     public $amount;
     public $paid_amount;
     public $payment_method = 'cash';
@@ -59,10 +63,57 @@ class SettlementManager extends Component
         $this->loadActiveSession();
     }
 
+    public function updatedSelectedServiceId($value)
+    {
+        if ($value) {
+            $service = Service::find($value);
+            if ($service) {
+                $this->selected_price = $service->price;
+            }
+        } else {
+            $this->selected_price = null;
+        }
+    }
+
+    public function addToCart()
+    {
+        $this->validate([
+            'selected_service_id' => 'required|exists:services,id',
+            'selected_quantity' => 'required|integer|min:1',
+            'selected_price' => 'required|numeric|min:0',
+        ]);
+
+        $service = Service::find($this->selected_service_id);
+        
+        $this->cart[] = [
+            'service_id' => $service->id,
+            'name' => $service->name,
+            'quantity' => $this->selected_quantity,
+            'price' => $this->selected_price,
+            'subtotal' => $this->selected_price * $this->selected_quantity,
+        ];
+
+        $this->reset(['selected_service_id', 'selected_price']);
+        $this->selected_quantity = 1;
+        $this->calculateCartTotal();
+    }
+
+    public function removeFromCart($index)
+    {
+        unset($this->cart[$index]);
+        $this->cart = array_values($this->cart);
+        $this->calculateCartTotal();
+    }
+
+    public function calculateCartTotal()
+    {
+        $this->amount = collect($this->cart)->sum('subtotal');
+    }
+
     public function loadActiveSession()
     {
         $this->activeSession = SalesSession::where('status', 'open')
-            ->where('user_id', Auth::id())
+            ->whereIn('user_id', Auth::user()->getTeamUserIds())
             ->latest()
             ->first();
             
@@ -75,18 +126,25 @@ class SettlementManager extends Component
     {
         $this->validate();
 
-        $this->activeSession = SalesSession::create([
-            'date' => $this->date,
-            'start_time' => date('H:i:s'),
-            'starting_cash' => $this->starting_cash,
-            'status' => 'open',
-            'user_id' => Auth::id(),
-        ]);
+        try {
+            $this->activeSession = SalesSession::create([
+                'date' => $this->date,
+                'start_time' => date('H:i:s'),
+                'starting_cash' => $this->starting_cash,
+                'status' => 'open',
+                'user_id' => Auth::id(),
+            ]);
 
-        // Initialize Inventory based on previous session or defaults
-        $this->initializeInventory();
-        
-        $this->dispatch('notify', ['type' => 'success', 'message' => 'Jornada abierta correctamente']);
+            // Initialize Inventory based on previous session or defaults
+            $this->initializeInventory();
+            
+            // Reload the session from the database to ensure it has all default attributes and mimics a page refresh perfectly
+            $this->loadActiveSession();
+            
+            $this->dispatch('notify', ['type' => 'success', 'message' => 'Jornada abierta correctamente']);
+        } catch (\Throwable $e) {
+            $this->dispatch('notify', ['type' => 'error', 'message' => 'Error: ' . $e->getMessage() . ' at line ' . $e->getLine() . ' in ' . basename($e->getFile())]);
+        }
     }
 
     public function initializeInventory()
@@ -108,6 +166,10 @@ class SettlementManager extends Component
             'client_id' => 'required|exists:clients,id',
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'required',
+            'cart' => 'required|array|min:1',
+        ], [
+            'cart.required' => 'Debe agregar al menos un servicio al carrito.',
+            'cart.min' => 'Debe agregar al menos un servicio al carrito.',
         ]);
 
         if ($this->editingSaleId) {
@@ -115,14 +177,22 @@ class SettlementManager extends Component
             
             $sale->update([
                 'client_id' => $this->client_id,
-                'expiry_date' => $sale->expiry_date ?? now()->addMonth(),
-                'quantity' => 1,
                 'amount' => $this->amount,
                 'paid_amount' => $this->payment_method === 'credit' ? ($this->paid_amount ?? 0) : $this->amount,
                 'payment_method' => $this->payment_method,
                 'status' => $this->payment_method === 'credit' ? ($this->paid_amount >= $this->amount ? 'paid' : 'pending') : 'paid',
                 'notes' => $this->notes,
             ]);
+
+            $sale->items()->delete();
+            foreach ($this->cart as $item) {
+                $sale->items()->create([
+                    'service_id' => $item['service_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'subtotal' => $item['subtotal'],
+                ]);
+            }
 
             $this->editingSaleId = null;
             $message = 'Venta actualizada';
@@ -136,13 +206,22 @@ class SettlementManager extends Component
                 'client_id' => $this->client_id,
                 'user_id' => Auth::id(),
                 'expiry_date' => now()->addMonth(),
-                'quantity' => 1,
+                'quantity' => collect($this->cart)->sum('quantity'),
                 'amount' => $saleAmount,
                 'paid_amount' => $salePaid,
                 'payment_method' => $this->payment_method,
                 'status' => $isDemo ? 'paid' : ($this->payment_method === 'credit' ? ($salePaid >= $saleAmount ? 'paid' : 'pending') : 'paid'),
                 'notes' => $this->notes,
             ]);
+
+            foreach ($this->cart as $item) {
+                $sale->items()->create([
+                    'service_id' => $item['service_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $isDemo ? 0 : $item['price'],
+                    'subtotal' => $isDemo ? 0 : $item['subtotal'],
+                ]);
+            }
 
             // Record the initial payment (skip for demo)
             if (!$isDemo && $salePaid > 0) {
@@ -157,7 +236,7 @@ class SettlementManager extends Component
             $message = 'Venta registrada';
         }
 
-        $this->reset(['client_id', 'amount', 'paid_amount', 'notes', 'status', 'payment_method']);
+        $this->reset(['client_id', 'cart', 'amount', 'paid_amount', 'notes', 'status', 'payment_method']);
         $this->payment_method = 'cash'; // Reset to default
         $this->status = 'paid'; // Reset to default
         $this->calculateTotals();
@@ -166,7 +245,7 @@ class SettlementManager extends Component
 
     public function editSale($id)
     {
-        $sale = GasSale::find($id);
+        $sale = GasSale::with('items.service')->find($id);
         $this->editingSaleId = $id;
         $this->client_id = $sale->client_id;
         $this->client_name_manual = $sale->client_name_manual;
@@ -175,6 +254,17 @@ class SettlementManager extends Component
         $this->payment_method = $sale->payment_method;
         $this->status = $sale->status;
         $this->notes = $sale->notes;
+        
+        $this->cart = [];
+        foreach ($sale->items as $item) {
+            $this->cart[] = [
+                'service_id' => $item->service_id,
+                'name' => $item->service->name ?? 'Servicio Eliminado',
+                'quantity' => $item->quantity,
+                'price' => $item->price,
+                'subtotal' => $item->subtotal,
+            ];
+        }
     }
 
     public function deleteSale($id)
@@ -362,7 +452,7 @@ class SettlementManager extends Component
 
     public function render()
     {
-        $historyQuery = SalesSession::where('user_id', Auth::id());
+        $historyQuery = SalesSession::whereIn('user_id', Auth::user()->getTeamUserIds());
 
         if ($this->filterStartDate) {
             $historyQuery->whereDate('date', '>=', $this->filterStartDate);
@@ -409,12 +499,13 @@ class SettlementManager extends Component
         return view('livewire.admin.sales.settlement-manager', [
             'sales' => $this->activeSession ? $this->activeSession->gasSales()->latest()->get() : [],
             'expenses' => $this->activeSession ? $this->activeSession->expenses()->latest()->get() : [],
-            'clients' => Client::where('user_id', Auth::id())->get(),
+            'clients' => Client::whereIn('user_id', Auth::user()->getTeamUserIds())->get(),
+            'services' => Service::where('is_active', true)->orderBy('name')->get(),
             'history' => $historyQuery->latest()->paginate(10),
             'totalPeriodSales' => $totalPeriodSales,
             'totalPeriodCollected' => $totalPeriodCollected,
             'totalPeriodExpenses' => $totalPeriodExpenses,
-            'pendingDebts' => GasSale::where('user_id', Auth::id())
+            'pendingDebts' => GasSale::whereIn('user_id', Auth::user()->getTeamUserIds())
                 ->where('status', 'pending')
                 ->when($this->searchClient, function($query) {
                     $query->where('client_name_manual', 'like', '%' . $this->searchClient . '%')

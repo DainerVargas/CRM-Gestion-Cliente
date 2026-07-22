@@ -17,7 +17,12 @@ class Client extends Model
         'rubro',
         'status',
         'status_changed_by',
-        'user_id'
+        'user_id',
+        'next_billing_date'
+    ];
+
+    protected $casts = [
+        'next_billing_date' => 'date',
     ];
 
     public function calls()

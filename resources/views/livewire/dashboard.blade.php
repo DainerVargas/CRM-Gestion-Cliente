@@ -3,7 +3,7 @@
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
-                Dashboard <span class="text-[#45C2ED] font-black">Overview</span>
+                Dashboard <span class="text-primary font-black">Overview</span>
             </h2>
             <p class="mt-2 text-sm text-slate-500 font-medium">
                 Bienvenido de nuevo. Aquí tienes un resumen de la actividad de hoy.
@@ -80,7 +80,7 @@
     <!-- Recent Activity Section -->
     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
         <div class="px-8 py-8 flex items-center justify-between border-b border-slate-100">
-            <h3 class="text-xl font-black text-[#0f172a] tracking-tight">Actividad <span class="text-[#45C2ED]">Reciente</span></h3>
+            <h3 class="text-xl font-black text-[#0f172a] tracking-tight">Actividad <span class="text-primary">Reciente</span></h3>
             <a href="/llamadas" class="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Ver todas las llamadas</a>
         </div>
         <div class="overflow-x-auto">

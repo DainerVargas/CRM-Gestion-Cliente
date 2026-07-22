@@ -12,6 +12,7 @@ class GasSale extends Model
     protected $fillable = [
         'sales_session_id',
         'client_id',
+        'service_id',
         'client_name_manual',
         'cylinder_type',
         'expiry_date',
@@ -47,5 +48,15 @@ class GasSale extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SaleItem::class, 'gas_sale_id');
     }
 }

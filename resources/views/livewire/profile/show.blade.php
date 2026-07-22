@@ -3,7 +3,8 @@
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
-                Mi <span class="text-[#45C2ED] font-black">Perfil</span>
+                Mi <span class="text-primary font-black">Perfil</span>
+
             </h2>
             <p class="mt-2 text-sm text-slate-500 font-medium tracking-tight">Gestiona tu información personal y seguridad de acceso.</p>
         </div>

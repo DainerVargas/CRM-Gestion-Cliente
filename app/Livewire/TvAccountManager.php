@@ -50,8 +50,8 @@ class TvAccountManager extends Component
     public function render()
     {
         return view('livewire.tv-account-manager', [
-            'accounts' => TvAccount::where('user_id', Auth::id())->latest()->get(),
-            'clients' => Client::where('user_id', Auth::id())->get()
+            'accounts' => TvAccount::whereIn('user_id', Auth::user()->getTeamUserIds())->latest()->get(),
+            'clients' => Client::whereIn('user_id', Auth::user()->getTeamUserIds())->get()
         ])->layout('layouts.app');
     }
 }

@@ -13,7 +13,7 @@ Tienes una llamada de seguimiento pendiente para una interacción registrada por
 Ver Cliente
 </x-mail::button>
 
-*Nota: Te enviamos este recordatorio con 2 horas de anticipación.*
+*Nota: Te enviamos este recordatorio con {{ $timeframe === '2 hours' ? '2 horas' : '5 minutos' }} de anticipación.*
 
 Gracias,<br>
 {{ config('app.name') }}

@@ -14,6 +14,7 @@ class Index extends Component
 
     public $name, $email, $password, $role = 'manager';
     public $showCreateModal = false, $showEditModal = false, $userId;
+    public $showDeleteConfirmModal = false, $userIdToDelete, $userNameToDelete;
 
     protected $rules = [
         'name' => 'required|min:3',
@@ -54,7 +55,7 @@ class Index extends Component
 
         $parentId = $currentUser->id;
         if ($currentUser->isSuperAdmin() && $this->role === 'assistant') {
-            $parentId = 1;
+            $parentId = $currentUser->getOwnerId();
         }
 
         User::create([
@@ -123,40 +124,63 @@ class Index extends Component
         session()->flash('message', 'Usuario actualizado correctamente.');
     }
 
-    public function delete($id)
+    public function confirmDelete($id)
     {
         if ($id === auth()->id()) {
             session()->flash('error', 'No puedes eliminarte a ti mismo.');
             return;
         }
 
-        $user = User::find($id);
-        
-        // Check permissions to delete
-        if (!auth()->user()->isSuperAdmin() && $user->parent_id !== auth()->id()) {
-            session()->flash('error', 'No tienes permiso para eliminar este usuario.');
+        $user = User::findOrFail($id);
+        $this->userIdToDelete = $user->id;
+        $this->userNameToDelete = $user->name;
+        $this->showDeleteConfirmModal = true;
+    }
+
+    public function cancelDelete()
+    {
+        $this->reset(['showDeleteConfirmModal', 'userIdToDelete', 'userNameToDelete']);
+    }
+
+    public function delete($id = null)
+    {
+        $id = $id ?? $this->userIdToDelete;
+        if (!$id) {
             return;
         }
 
-        $user->delete();
-        session()->flash('message', 'Usuario eliminado.');
+        if ($id === auth()->id()) {
+            session()->flash('error', 'No puedes eliminarte a ti mismo.');
+            $this->cancelDelete();
+            return;
+        }
+
+        $user = User::find($id);
+        
+        // Check permissions to delete
+        if ($user && !auth()->user()->isSuperAdmin() && $user->parent_id !== auth()->id()) {
+            session()->flash('error', 'No tienes permiso para eliminar este usuario.');
+            $this->cancelDelete();
+            return;
+        }
+
+        if ($user) {
+            $user->delete();
+            session()->flash('message', 'Usuario eliminado. Sus registros relacionados (como clientes y llamadas) permanecen en el sistema para referencia histórica, pero el usuario ya no tiene acceso.');
+        }
+
+        $this->cancelDelete();
     }
 
     public function render()
     {
-        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $currentUser = auth()->user();
         $query = User::query();
 
-        if ($isSuperAdmin) {
-            $query->where(function ($q) {
-                $q->where('role', '!=', 'assistant')
-                  ->orWhereDoesntHave('parent', function ($sub) {
-                      $sub->where('role', 'manager');
-                  });
-            });
-        } else {
-            $managedIds = auth()->user()->getManagedUserIds();
-            $query->whereIn('id', array_diff($managedIds, [auth()->id()]));
+        if (!$currentUser->isSuperAdmin()) {
+            // Managers and assistants see only their team members
+            $teamIds = $currentUser->getTeamUserIds();
+            $query->whereIn('id', array_diff($teamIds, [$currentUser->id]));
         }
 
         return view('livewire.users.index', [

@@ -12,7 +12,7 @@ class Show extends Component
 {
     public Client $client;
     public $showEditModal = false;
-    public $name, $email, $phone, $company, $rubro, $status, $user_id;
+    public $name, $email, $phone, $company, $rubro, $status, $user_id, $next_billing_date;
     public $payment_increment; // For debt payments
 
     public $index_page, $index_search, $index_status;
@@ -29,7 +29,7 @@ class Show extends Component
         $isSuperAdmin = auth()->user()->isSuperAdmin();
 
         $this->client = Client::with(['calls', 'user', 'gasSales'])
-            ->when(!auth()->user()->isSuperAdmin(), fn($q) => $q->where('user_id', auth()->id()))
+            ->whereIn('user_id', auth()->user()->getTeamUserIds())
             ->findOrFail($id);
 
         $this->name = $this->client->name;
@@ -39,6 +39,7 @@ class Show extends Component
         $this->rubro = $this->client->rubro;
         $this->status = $this->client->status;
         $this->user_id = $this->client->user_id;
+        $this->next_billing_date = $this->client->next_billing_date ? $this->client->next_billing_date->format('Y-m-d') : null;
 
         $ownerId = auth()->user()->isAssistant() ? (auth()->user()->parent_id ?? auth()->id()) : auth()->id();
         $this->whatsappTemplates = \App\Models\WhatsappTemplate::where('user_id', $ownerId)->get();
@@ -74,11 +75,7 @@ class Show extends Component
 
     public function openEditModal()
     {
-        if (auth()->user()->isAssistant()) {
-            $this->user_id = auth()->id();
-        } else {
-            $this->user_id = $this->client->user_id;
-        }
+        $this->user_id = $this->client->user_id;
 
         $this->showEditModal = true;
     }
@@ -92,6 +89,7 @@ class Show extends Component
             'rubro' => 'nullable|string',
             'status' => 'required|in:active,inactive,prospect,libre,not_interested',
             'user_id' => 'required|exists:users,id',
+            'next_billing_date' => 'nullable|date',
         ]);
 
         if ($this->client->status !== $this->status) {
@@ -109,6 +107,7 @@ class Show extends Component
             'status' => $this->status,
             'status_changed_by' => $this->client->status_changed_by,
             'user_id' => $this->user_id,
+            'next_billing_date' => $this->next_billing_date,
         ]);
 
         $this->client->refresh();
@@ -196,13 +195,7 @@ class Show extends Component
     public function render()
     {
         $currentUser = auth()->user();
-        $agents = [];
-
-        if ($currentUser->isSuperAdmin()) {
-            $agents = \App\Models\User::all();
-        } else {
-            $agents = \App\Models\User::where('id', $currentUser->id)->get();
-        }
+        $agents = \App\Models\User::whereIn('id', $currentUser->getTeamUserIds())->get();
 
         return view('livewire.clients.show', [
             'calls' => $this->client->calls()->with('recording')->latest()->get(),

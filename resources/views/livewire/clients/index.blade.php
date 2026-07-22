@@ -3,7 +3,8 @@
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
-                Gestión de <span class="text-[#45C2ED] font-black">Clientes</span>
+                Gestión de <span class="text-primary font-black">Clientes</span>
+
             </h2>
             <p class="mt-2 text-sm text-slate-500 font-medium">
                 Listado completo y administración de tu cartera de clientes.
@@ -126,7 +127,8 @@
                         <th class="px-8 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">
                             Última Llamada</th>
                         <th class="px-8 py-4 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            Agente Beit</th>
+                            Asesor</th>
+
                         <th class="px-8 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">
                             Acciones</th>
                     </tr>
@@ -142,8 +144,9 @@
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-bold text-slate-900">{{ $client->name }}</div>
-                                        <div class="text-xs text-slate-400 font-medium">Registrado:
-                                            {{ $client->created_at->format('d/m/Y') }}</div>
+                                        <div class="text-xs {{ $client->next_billing_date ? 'text-indigo-500 font-bold' : 'text-slate-400 font-medium' }}">
+                                            {{ $client->next_billing_date ? 'Próximo cobro: ' . $client->next_billing_date->format('d/m/Y') : 'Sin fecha de cobro' }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>

@@ -59,7 +59,7 @@ class Index extends Component
 
     public function export()
     {
-        $userIds = auth()->user()->isSuperAdmin() ? null : [auth()->id()];
+        $userIds = auth()->user()->getTeamUserIds();
         return Excel::download(new ClientsExport($userIds), 'clientes.xlsx');
     }
 
@@ -98,9 +98,7 @@ class Index extends Component
     public function render()
     {
         $clients = Client::query()->with(['user', 'latestCall'])
-            ->when(!auth()->user()->isSuperAdmin(), function($q) {
-                $q->where('user_id', auth()->id());
-            })
+            ->whereIn('user_id', auth()->user()->getTeamUserIds())
             ->when($this->search, function ($query) {
                 $query->where(function($q) {
                     $cleanSearch = preg_replace('/[^0-9]/', '', $this->search);

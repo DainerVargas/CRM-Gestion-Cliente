@@ -18,13 +18,17 @@ class Call extends Model
         'observations',
         'result',
         'next_call_at',
-        'notified'
+        'notified',
+        'notified_2h',
+        'notified_5m'
     ];
 
     protected $casts = [
         'called_at' => 'datetime',
         'next_call_at' => 'datetime',
-        'notified' => 'boolean'
+        'notified' => 'boolean',
+        'notified_2h' => 'boolean',
+        'notified_5m' => 'boolean'
     ];
 
     public function client()

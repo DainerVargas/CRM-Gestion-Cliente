@@ -31,9 +31,7 @@ class Index extends Component
         $calls = Call::query()
             ->with('client')
             ->whereHas('client', function($q) {
-                if (!auth()->user()->isSuperAdmin()) {
-                    $q->where('user_id', auth()->id());
-                }
+                $q->whereIn('user_id', auth()->user()->getTeamUserIds());
                 
                 if ($this->search) {
                     $q->where(function($sq) {

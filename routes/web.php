@@ -17,6 +17,7 @@ Route::middleware(['auth'])->group(function () { // Added middleware group
     Route::get('/clientes/{id}', \App\Livewire\Clients\Show::class)->name('clients.show');
     Route::get('/llamadas', \App\Livewire\Calls\Index::class)->name('calls.index');
     Route::get('/usuarios', UsersIndex::class)->name('users.index');
+    Route::get('/servicios', \App\Livewire\Services\Index::class)->name('services.index');
     Route::get('/mensajes-predeterminados', \App\Livewire\WhatsappTemplates\Index::class)->name('whatsapp-templates.index');
     Route::get('/perfil', \App\Livewire\Profile\Show::class)->name('profile.show');
     Route::post('/call-recordings', [\App\Http\Controllers\CallRecordingController::class, 'store'])->name('call-recordings.store');

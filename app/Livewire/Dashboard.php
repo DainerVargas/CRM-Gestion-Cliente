@@ -12,8 +12,8 @@ class Dashboard extends Component
     {
         $isSuperAdmin = auth()->user()->isSuperAdmin();
 
-        $clientQuery = Client::query()->when(!$isSuperAdmin, fn($q) => $q->where('user_id', auth()->id()));
-        $callQuery = Call::query()->when(!$isSuperAdmin, fn($q) => $q->whereHas('client', fn($cq) => $cq->where('user_id', auth()->id())));
+        $clientQuery = Client::query()->whereIn('user_id', auth()->user()->getTeamUserIds());
+        $callQuery = Call::query()->whereHas('client', fn($cq) => $cq->whereIn('user_id', auth()->user()->getTeamUserIds()));
 
         return view('livewire.dashboard', [
             'totalClients' => (clone $clientQuery)->count(),

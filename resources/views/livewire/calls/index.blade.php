@@ -3,7 +3,8 @@
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
             <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0f172a]">
-                Historial de <span class="text-[#45C2ED] font-black">Llamadas</span>
+                Historial de <span class="text-primary font-black">Llamadas</span>
+
             </h2>
             <p class="mt-2 text-sm text-slate-500 font-medium">
                 Resumen global de todas las interacciones realizadas con clientes.
